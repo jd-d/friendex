@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatGPT File Helper</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h1>ChatGPT File Helper</h1>
+        <p class="muted">Friendly shell over Codex for file tasks on Windows.</p>
+
+        <div class="card">
+          <label>Working folder</label>
+          <div class="row">
+            <input id="cwd" type="text" placeholder="Choose a folder" />
+            <button id="choose-folder">Browse</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <label>Quick tasks</label>
+          <div class="quick-tasks">
+            <button class="quick-task" data-prompt="Organise the files in this folder into clearly named subfolders. Explain your plan first and wait for approval before making changes.">Organise folder</button>
+            <button class="quick-task" data-prompt="Review this folder and suggest a safe cleanup plan. Do not delete anything without approval.">Safe cleanup</button>
+            <button class="quick-task" data-prompt="Look at the file names in this folder and propose a clearer naming scheme. Wait for approval before renaming anything.">Rename files clearly</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <section class="composer card">
+          <label for="prompt">What would you like help with?</label>
+          <textarea id="prompt" placeholder="Example: Help me organise the pictures in this folder by year and month. Explain first, then wait for my approval."></textarea>
+          <div class="row end">
+            <button id="run">Run with Codex</button>
+          </div>
+        </section>
+
+        <section class="status-strip card">
+          <strong>Status:</strong>
+          <span id="status">Idle.</span>
+        </section>
+
+        <section class="output-grid">
+          <section class="card">
+            <h2>Friendly output</h2>
+            <pre id="final-output"></pre>
+          </section>
+
+          <section class="card">
+            <h2>Debug / events</h2>
+            <pre id="event-log"></pre>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

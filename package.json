@@ -1,0 +1,15 @@
+{
+  "name": "chatgpt-friendly-codex-starter",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Starter repo for a friendlier Codex-based Windows assistant",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:desktop": "npm --workspace apps/desktop run dev",
+    "start:desktop": "npm --workspace apps/desktop run start",
+    "check": "node packages/core/src/demo.js"
+  }
+}

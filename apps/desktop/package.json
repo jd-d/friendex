@@ -1,0 +1,14 @@
+{
+  "name": "friendly-codex-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "electron": "^36.0.0"
+  }
+}

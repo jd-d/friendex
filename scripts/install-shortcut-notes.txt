@@ -1,0 +1,12 @@
+Windows shortcut target example for PowerShell 7:
+
+pwsh.exe -NoLogo -ExecutionPolicy Bypass -File "C:\path\to\repo\scripts\launch-chatgpt.ps1" -StartFolder "%USERPROFILE%"
+
+You can name the shortcut:
+- ChatGPT File Helper
+- ChatGPT for Files
+- Organise My Files
+
+Suggested icon/location:
+- Desktop shortcut for initial testing
+- Start Menu shortcut for less technical users
