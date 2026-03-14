@@ -1,33 +1,66 @@
 export function mapCodexEventToStatus(event) {
   if (!event || typeof event !== 'object') {
-    return 'Starting…';
+    return 'Starting...';
   }
 
-  const type = event.type || event.event || 'unknown';
+  const type = event.type;
+  const item = event.item;
 
   switch (type) {
     case 'thread.started':
-      return 'Starting session…';
+      return 'Starting session...';
+
     case 'turn.started':
-      return 'Working on your request…';
+      return 'Working on your request...';
+
     case 'turn.completed':
       return 'Finished.';
+
     case 'turn.failed':
       return 'Something went wrong.';
-    case 'item.web_search':
-    case 'web_search':
-      return 'Looking something up…';
-    case 'item.command_execution':
-    case 'command_execution':
-      return 'Checking files…';
-    case 'item.apply_patch':
-    case 'apply_patch':
-      return 'Preparing changes…';
-    case 'approval.required':
-      return 'Waiting for your approval…';
+
+    case 'item.started':
+      return mapItemStarted(item);
+
+    case 'item.completed':
+      return mapItemCompleted(item);
+
     case 'error':
       return 'Something went wrong.';
+
     default:
-      return 'Working…';
+      return 'Working...';
+  }
+}
+
+function mapItemStarted(item) {
+  if (!item) return 'Working...';
+
+  switch (item.type) {
+    case 'command_execution':
+      return 'Running a command...';
+    case 'apply_patch':
+      return 'Preparing changes...';
+    case 'web_search':
+      return 'Looking something up...';
+    default:
+      return 'Working...';
+  }
+}
+
+function mapItemCompleted(item) {
+  if (!item) return 'Working...';
+
+  switch (item.type) {
+    case 'agent_message':
+      return 'Thinking...';
+    case 'command_execution':
+      return item.status === 'failed' ? 'Command failed, retrying...' : 'Checking results...';
+    case 'apply_patch':
+      return item.status === 'failed' ? 'Patch failed.' : 'Changes applied.';
+    case 'web_search':
+      return 'Processing results...';
+    default:
+      return 'Working...';
   }
 }

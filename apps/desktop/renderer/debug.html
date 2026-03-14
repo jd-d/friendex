@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Friendex - Debug / events</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="debug-window">
+    <main class="debug-window-shell">
+      <section class="card debug-window-card">
+        <header class="debug-window-header">
+          <div>
+            <p class="eyebrow">Separate window</p>
+            <h1>Debug / events</h1>
+            <p class="muted">This follows the same event log as the main window. Use Settings in the main app to dock or hide it again.</p>
+          </div>
+          <p id="debug-status" class="small-text muted">Status: Idle.</p>
+        </header>
+        <pre id="event-log">No debug output yet.</pre>
+      </section>
+    </main>
+
+    <script src="debug.js"></script>
+  </body>
+</html>

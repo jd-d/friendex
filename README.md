@@ -1,6 +1,8 @@
-# ChatGPT File Assistant
+# Friendex
 
-A Windows-first project that makes the Codex CLI feel less daunting for non-technical users.
+A Windows-first project that makes Codex feel less daunting and more useful for non-technical users on their own PC.
+
+The core idea is simple: expose the power of the local Windows machine, including tasks that often feel trapped behind Command Prompt or PowerShell, without making the user deal with the terminal directly.
 
 This repo intentionally supports **two product tracks at once**:
 
@@ -26,16 +28,28 @@ This project explores a gentler layer on top of Codex so a user can do things li
 - rename files more clearly
 - sort images by year or event
 - find duplicates
-- ask for help with ordinary folders, not only code repos
+- find a file, app, or setting
+- ask what a Windows setting does
+- get guided through configuration changes more safely
+- ask for help with ordinary PC tasks, not only code repos
+
+File and folder work is an important early wedge, but it is not the whole product boundary.
 
 The user should feel like they are using a helpful Windows assistant, not a developer tool.
+
+In practice, that means Friendex is not trying to replace Codex so much as wrap it:
+
+- remove the scary terminal barrier
+- keep the power of local tools available
+- decide carefully when to pass Codex through directly
+- decide carefully when to translate or simplify it for safety and clarity
 
 ## Product principles
 
 - **Friendly**: plain language, calm UI, readable defaults
 - **Safe**: approvals remain on by default
 - **Windows-first**: optimise for ordinary Windows users and folders
-- **Practical**: home folders, Pictures, Downloads, Documents
+- **Practical**: files, search, settings, and ordinary local PC tasks
 - **Transparent**: show what is happening in human language
 - **Flexible**: keep room to change architecture as we learn
 
@@ -47,7 +61,7 @@ Codex provides:
 
 - planning
 - tool usage
-- filesystem actions
+- local task execution
 - execution
 
 This project provides:
@@ -57,6 +71,14 @@ This project provides:
 - a safer default workflow
 - launchers and wrappers
 - translation of technical behavior into normal language
+
+One of the main product decisions over time will be this boundary:
+
+- when Friendex should pass Codex's message through mostly as-is
+- when Friendex should reframe or simplify it
+- when Friendex should add its own guardrails, prompts, or warnings
+
+Where possible, Friendex should prefer lightweight prompt shaping over brittle post-processing, but only after that behavior is verified against real Codex runs.
 
 ## Current repository structure
 
@@ -94,7 +116,7 @@ Use PowerShell / Windows Terminal to create a friendlier shell experience:
 - light theme
 - larger readable font
 - calm startup text
-- fixed or chosen safe folder
+- fixed or chosen safe folder when the task needs one
 - optional desktop shortcut
 - optional app-like open-and-close behavior
 
@@ -102,7 +124,7 @@ Use PowerShell / Windows Terminal to create a friendlier shell experience:
 
 Run Codex behind the scenes and present a normal app interface:
 
-- user chooses or starts in a folder
+- user chooses a folder when relevant or starts from a safe default
 - user enters a task in plain language
 - app launches Codex as a subprocess
 - app reads structured events
@@ -130,7 +152,9 @@ The UI should **not** expose raw hidden reasoning.
 Instead, it should show a small number of user-friendly states derived from real Codex activity, for example:
 
 - Starting assistant
-- Reading your folder
+- Reading your files
+- Searching your PC
+- Checking a setting
 - Preparing changes
 - Looking something up
 - Waiting for approval
@@ -149,7 +173,7 @@ These are working assumptions, not hard commitments:
 - the initial backend likely uses `codex exec --json`
 - approvals stay enabled by default
 - no YOLO mode by default
-- the app should work on ordinary folders, not just repos
+- the app should work on ordinary folders and broader local PC tasks, not just repos
 
 If Codex integration details differ on a real machine, adapt the implementation instead of forcing the repo to match assumptions.
 
@@ -158,7 +182,7 @@ If Codex integration details differ on a real machine, adapt the implementation 
 1. Make the PowerShell launcher feel genuinely friendly
 2. Verify Codex event parsing against a real installed Codex version
 3. Connect the desktop app to real Codex output
-4. Add safe folder/task flows for Pictures and Downloads
+4. Add safe, high-value everyday Windows flows starting with files, finding things, and settings guidance
 5. Improve approval UX and action previews
 
 ## Running the current desktop shell
@@ -176,7 +200,7 @@ For now, avoid overbuilding:
 
 - no giant framework migration before the proof of concept works
 - no full undo engine before basic task flow works
-- no promise of perfect autonomous file management
+- no promise of perfect autonomous PC management
 - no removal of approval prompts as a default path
 
 ## Direction
@@ -185,4 +209,4 @@ This repo should remain easy for coding agents to work with.
 
 It is acceptable to change the stack, folder layout, or integration approach if testing shows a better path. What should stay constant is the product intent:
 
-**make Codex feel safer, friendlier, and more useful for ordinary Windows file tasks.**
+**make Codex feel safer, friendlier, and more useful for ordinary Windows tasks on a user's PC.**

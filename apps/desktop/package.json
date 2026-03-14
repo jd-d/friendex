@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "main": "main.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "start": "electron .",
     "dev": "electron ."
   },
   "dependencies": {
-    "electron": "^36.0.0"
+    "electron": "^33.0.0"
   }
 }

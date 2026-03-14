@@ -1,241 +1,213 @@
 # TODO
 
-This file is the working execution list for the project.
+This is the single active roadmap and delivery backlog for Friendex.
 
-The repo is intentionally pursuing **two tracks in parallel**:
+## Operating rules
 
-- wrapped terminal
-- desktop app
+- Every new request should be mapped to an existing item here or added here before it is considered fully planned.
+- Prioritize in this order: `0. critical usability bugs`, `1. robustness`, `2. UX`, `3. later bets`.
+- Keep both desktop and wrapped-terminal tracks visible unless the project deliberately changes direction.
+- Treat file and folder help as an important starting wedge, not the full product boundary.
+- Merge overlapping requests into existing workstreams instead of creating duplicate backlog items.
+- Add technical debt and refactor follow-ups explicitly instead of burying them inside feature work.
+- For user-facing behavior changes, explicitly evaluate whether `README.md` should be updated in the same change window.
 
-Both should build on a shared core whenever sensible.
+## Recommended next wave
 
----
-
-## 0. Project framing
-
-- [ ] Finalise project name for repo, app window, and shortcut labels
-- [ ] Decide whether "ChatGPT" remains internal shorthand, external label, or is replaced with a more neutral product name
-- [ ] Add a short product statement that fits GitHub, issues, and future landing pages
-- [ ] Write down the main user persona(s)
-- [ ] Define the first 3 to 5 user tasks we are explicitly optimising for
-
-Suggested first task set:
-- organise Pictures
-- clean Downloads
-- rename files clearly
-- find duplicates
-- help me understand what is in this folder
+1. `1A.1` through `1A.5`: unify persisted settings, add max query-size protection, and cover the new desktop state model with tests.
+2. `1B.1` through `1B.5`: add query history safely, including deletion and clear-all behavior with confirmation.
+3. `1C.1` through `1C.4`: verify Codex input and memory surfaces before building clipboard, attachments, and memory-management UX on assumptions.
+4. `2C.1` and `2C.4`: expand the first example flows so Friendex does not stay implicitly file-only once the current safety foundation is in place.
+5. `2A.1` through `2A.7`: build memory-management UX only after the real memory surfaces are verified.
+6. Pull `3D.6` and `1D.6` forward before building heavy-handed response rewriting, so the pass-through versus translation boundary is defined on purpose.
+7. Pull the smallest necessary `3A` and other `3D` slices forward only when they clearly reduce risk or prevent misleading product framing in the active wave.
 
 ---
 
-## 1. Reality-check Codex integration
+## 0. Critical usability bugs
 
-- [ ] Verify installed Codex CLI commands and flags on a real Windows machine
-- [ ] Confirm whether `codex exec --json` works exactly as assumed
-- [ ] Capture real sample output from Codex runs
-- [ ] Save sample JSONL events for testing/parsing fixtures
-- [ ] Check how approvals are surfaced in CLI mode
-- [ ] Confirm behavior when starting in a normal non-git folder
-- [ ] Confirm best way to set working directory for subprocess runs
-- [ ] Decide whether near-term integration stays on `codex exec` or moves toward a longer-running approach later
+### Workstream `0A`: Live run trust and control
 
-Deliverable:
-- a short `docs/codex-integration-notes.md`
+Goal: make the desktop app understandable and trustworthy while a task is running.
 
----
+Dependencies: none.
 
-## 2. Shared core package
-
-Goal: one reusable backend layer for both terminal and desktop surfaces.
-
-- [ ] Clean up `packages/core` API surface
-- [ ] Define a stable runner contract
-- [ ] Separate raw event parsing from friendly status mapping
-- [ ] Add support for stdout, stderr, exit codes, cancellation, and timeouts
-- [ ] Create fixtures-based parser tests using real captured Codex output
-- [ ] Add a very small event/state model document
-- [ ] Ensure the core never depends on Electron-specific APIs
-
-Possible API shape:
-- `startRun()`
-- `cancelRun()`
-- `onRawEvent()`
-- `onStatus()`
-- `onFinalMessage()`
-- `onError()`
+- [x] `0A.1` Make approval-required runs understandable.
+  - Current shipped behavior in the desktop app:
+    - detect permission-blocked runs from the actual `exec` output patterns
+    - explain that the run was blocked by current Codex permissions
+    - avoid suggesting a live approval dialog where the current integration does not actually provide one
+- [x] `0A.2` Document how approvals actually surface in the current `codex exec` path.
+  - Verify whether approval completion happens in-app, in a terminal/Codex UI, in browser/system UI, or some mix depending on the flow.
+  - Write down the current truth in `docs/` so future UX work stays grounded.
+- [x] `0A.3` Add an authorization and reauthorization entry point in the desktop app.
+- [x] `0A.4` Verify the current Codex auth flow against official docs and local Windows behavior.
+  - Current scope verified: `codex login`, `codex login status`, browser flow, and device-auth flow.
+  - Revisit if logout or token-state behavior becomes user-facing in-app.
+- [x] `0A.5` Move status into a bottom status bar and allow hiding it in Settings.
+- [x] `0A.6` Move the settings affordance to the header and show the `Settings` label when there is enough space.
+- [x] `0A.7` Move quick example tasks beside the `Go!` action and stop burning a full extra section on them.
+- [x] `0A.8` Add debug visibility modes: hidden, docked in the main window, or popped out into a separate window, and persist the choice.
+- [x] `0A.9` Disable nonessential MCP servers for Friendex-run Codex sessions by default until a specific shipped feature needs them.
+  - Why: they currently add connector auth noise, startup clutter, and capability surface that the initial Friendex local-helper flows do not need.
+  - Important: do this as a per-run Friendex override rather than changing the user's normal Codex setup globally.
 
 ---
 
-## 3. Friendly status system
+## 1. Robustness
 
-Goal: convert technical runtime behavior into a tiny, calm vocabulary.
+### Workstream `1A`: Settings and input safety foundation
 
-- [ ] Define initial status vocabulary
-- [ ] Map real Codex events onto friendly statuses
-- [ ] Avoid exposing raw hidden reasoning
-- [ ] Add fallback behavior for unknown events
-- [ ] Add logging that preserves raw events for debugging without showing them to end users
-- [ ] Decide whether multi-line progress details are needed, or only a single current state
+Goal: make desktop state predictable, persisted, and safe under ordinary user mistakes.
 
-Candidate statuses:
-- Starting assistant
-- Reading your folder
-- Understanding your request
-- Preparing changes
-- Waiting for approval
-- Applying approved changes
-- Finished
-- Something went wrong
+Dependencies: `0A` baseline is in place.
 
----
+- [ ] `1A.1` Persist all user-facing settings in one coherent schema.
+  - Current known settings: working folder, status-bar visibility, debug visibility/pop-out, and future max query size.
+  - Keep the schema ready for history and memory-related settings rather than scattering new keys ad hoc.
+- [ ] `1A.2` Add a configurable max query size with a sensible default.
+- [ ] `1A.3` When the query exceeds the configured limit, block submission and show a red warning explaining that the limit protects the app from hanging on extremely large input.
+- [ ] `1A.4` Decide whether the limit is measured in characters, bytes, or both, and document the rule in the UI and docs.
+- [ ] `1A.5` Add tests for settings persistence, query-limit validation, and debug-window lifecycle.
 
-## 4. Wrapped terminal track
+### Workstream `1B`: Query history
 
-Goal: make the terminal route viable and friendly quickly.
+Goal: keep user-entered task history visible and manageable without turning it into an opaque data sink.
 
-- [ ] Improve `launch-chatgpt.ps1`
-- [ ] Set friendly startup location behavior
-- [ ] Add optional folder argument
-- [ ] Add readable startup banner/help text
-- [ ] Add optional app-like mode that closes when Codex exits
-- [ ] Add optional stay-open mode for debugging
-- [ ] Add shortcut creation script or installer notes
-- [ ] Test in PowerShell 7 and Windows Terminal
-- [ ] Explore light theme / larger font / calm colors via Terminal profile guidance
-- [ ] Decide whether to create a custom Windows Terminal profile automatically or document it manually
+Dependencies: `1A`.
 
-Nice-to-have:
-- [ ] one-click desktop shortcut
-- [ ] Start Menu shortcut
-- [ ] launcher mode for Pictures / Downloads / Documents
+- [ ] `1B.1` Store every submitted query locally.
+- [ ] `1B.2` Expose query history in Settings.
+- [ ] `1B.3` Allow deleting individual history items.
+- [ ] `1B.4` Allow clearing all history with confirmation.
+- [ ] `1B.5` Decide and document whether history stores only prompt text or also working folder, timestamp, and attachments.
 
----
+### Workstream `1C`: Codex capability verification and safe rich-input support
 
-## 5. Desktop app track
+Goal: only promise inputs and memory surfaces that the current Codex integration really supports.
 
-Goal: create a genuine desktop app that feels less technical.
+Dependencies: none, but complete this before shipping attachment and memory-management UX.
 
-- [ ] Confirm whether Electron remains the best starter stack
-- [ ] Clean up app shell structure
-- [ ] Replace placeholder frontend logic with real core integration
-- [ ] Add folder chooser
-- [ ] Add current workspace display
-- [ ] Add task input box and conversation area
-- [ ] Stream friendly status from the shared core
-- [ ] Show final answer cleanly
-- [ ] Surface approval requests in plain language
-- [ ] Add cancel button
-- [ ] Add restart/new task flow
-- [ ] Improve empty state for first-time users
+- [ ] `1C.1` Verify the current `codex exec` support for image attachments and any relevant file-attachment path for this app.
+- [ ] `1C.2` Add clipboard and file-picker input support only for input types the active Codex integration actually supports.
+- [ ] `1C.3` If non-image file attachment is not supported in the current `codex exec` path, provide a clear fallback instead of pretending it works.
+- [ ] `1C.4` Verify what local artifacts should count as app-visible "memory."
+  - Candidate surfaces: global `~/.codex` guidance, repo-local `AGENTS.md`, session transcripts under `~/.codex/sessions`, and any other confirmed persistence surfaces.
+- [ ] `1C.5` Revisit MCP only when a concrete Friendex feature genuinely needs it.
+  - Examples that might justify re-enabling a specific MCP server later:
+    - external calendar/task integrations
+    - structured forms/workflows
+    - other clearly user-facing capabilities that go beyond the core local helper path
 
-Decision point later:
-- [ ] stay on Electron
-- [ ] move to Tauri
-- [ ] move to local web app + native launcher
+### Workstream `1D`: Shared core and runner hardening
+
+Goal: keep desktop and terminal surfaces grounded on one reliable core instead of duplicating behavior.
+
+Dependencies: none.
+
+- [ ] `1D.1` Stabilize `packages/core` as a reusable runner API for desktop and terminal surfaces.
+- [ ] `1D.2` Separate raw event parsing from friendly status mapping.
+- [ ] `1D.3` Add fixtures-based coverage for stdout, stderr, exit codes, cancellation, and timeouts.
+- [ ] `1D.4` Capture and document real Windows approval, auth, and non-git-folder behavior.
+- [ ] `1D.5` Ensure the shared core never depends on Electron-specific APIs.
+- [ ] `1D.6` Evaluate a lightweight Friendex prompt layer before building heavier post-processing of Codex responses.
+  - Prefer prompt shaping when it reliably produces calmer, clearer output.
+  - Do not rely on it until real runs show it behaves predictably across common task types.
 
 ---
 
-## 6. Safety and approval UX
+## 2. UX
 
-This is central to the product.
+### Workstream `2A`: Memory and instruction management
 
-- [ ] Document the default safety stance
-- [ ] Keep approvals on by default
-- [ ] Translate technical approval prompts into plain English
-- [ ] Add pre-action summary where feasible
-- [ ] Distinguish read-only tasks from edit tasks
-- [ ] Add a visible warning before bulk file operations
-- [ ] Define what the app should do when Codex asks for something unclear or risky
-- [ ] Create a simple “safer defaults” checklist for future contributors
+Goal: let users explicitly manage what Codex should remember, and make that scope understandable.
 
----
+Dependencies: `1C.4` should verify the real memory surfaces first.
 
-## 7. First task-focused workflows
+- [ ] `2A.1` Add a `Remember this` action under Friendly output.
+- [ ] `2A.2` Add a quick example bubble labeled `Tell me what to remember`.
+- [ ] `2A.3` Make that example populate a memory-capture prompt like `Always remember this preference or instruction: ...`.
+- [ ] `2A.4` Build a memory and instruction manager UI that shows all confirmed Codex memory sources relevant to the current run.
+- [ ] `2A.5` Show global and local sources separately, with clear labels about scope and impact.
+- [ ] `2A.6` Allow deleting memories or instructions from supported sources, with confirmation and clear warnings where deletion is destructive.
+- [ ] `2A.7` Explain the difference between global guidance, repo-local guidance, and per-session history in plain English.
 
-Start narrow. Make a few workflows work well.
+### Workstream `2B`: Desktop shell polish
 
-### Pictures
-- [ ] Organise by year/month
-- [ ] Group screenshots separately
-- [ ] Suggest better names for unlabeled images
-- [ ] Preview proposed folder structure before applying
+Goal: make the shell feel calm, readable, and intentional without hiding important control points.
 
-### Downloads
-- [ ] Group by file type
-- [ ] Identify old installers / duplicates / archives
-- [ ] Suggest cleanup candidates instead of deleting automatically
+Dependencies: `0A` baseline is in place.
 
-### General folder help
-- [ ] Summarise what is in a folder
-- [ ] Find the largest files
-- [ ] Find likely duplicates
-- [ ] Suggest a clean structure
+- [x] `2B.1` Collapse the desktop header copy into one compact product line to reduce wasted vertical space.
+- [ ] `2B.2` Keep the header calm and readable on narrow windows while preserving the right-aligned settings action.
+- [ ] `2B.3` Make the bottom status bar and popped-out debug window behave well across restart, resize, and multi-monitor use.
+- [ ] `2B.4` Improve first-run empty states for auth, folder selection, debug visibility, and history.
 
----
+### Workstream `2C`: First task flows
 
-## 8. UX writing
+Goal: make the first few high-value everyday Windows tasks feel obvious and safe.
 
-- [ ] Decide on voice/tone for non-technical users
-- [ ] Keep prompts and statuses short and plain
-- [ ] Remove developer jargon where possible
-- [ ] Create friendly examples for first launch
-- [ ] Write approval text in normal language
-- [ ] Create error copy that tells the user what to do next
+Dependencies: `0A` and `2A` where relevant.
+
+- [ ] `2C.1` Continue tightening the first example flows for ordinary Windows tasks:
+  - organize folder
+  - safe cleanup
+  - rename files clearly
+  - find a file, app, or setting
+  - help me change a Windows setting safely
+  - tell me what to remember
+- [ ] `2C.2` Add safer plain-English approval copy before edits and bulk operations.
+- [ ] `2C.3` Add clearer explanations for what the app remembers automatically versus only when the user explicitly chooses `Remember this`.
+- [ ] `2C.4` Separate search/explain/help-me-find tasks from change-making tasks so the UI does not imply every request is an edit flow.
+- [ ] `2C.5` Define which classes of Codex output should be passed through directly, lightly reframed, or actively translated in the everyday task flows.
 
 ---
 
-## 9. Testing
+## 3. Later bets, technical debt, and strategy
 
-- [ ] Add parser tests for event samples
-- [ ] Add smoke test for runner startup
-- [ ] Add manual test checklist for terminal launcher
-- [ ] Add manual test checklist for desktop app
-- [ ] Test with ordinary folders containing mixed file types
-- [ ] Test failure cases: missing Codex, denied approval, malformed output, closed process
+### Workstream `3A`: Desktop maintainability and delivery-risk reduction
 
----
+Goal: keep the current desktop implementation from becoming too tangled to extend safely.
 
-## 10. Documentation
+Dependencies: pull these forward when they clearly reduce risk for the active wave.
 
-- [ ] Keep `README.md` in sync with reality
-- [ ] Keep `AGENTS.md` in sync with reality
-- [ ] Add `docs/codex-integration-notes.md`
-- [ ] Add `docs/status-model.md`
-- [ ] Add `docs/safety.md`
-- [ ] Add screenshots or GIFs once the UI is presentable
+- [ ] `3A.1` Extract desktop settings and persistence logic into a dedicated module instead of continuing to grow `apps/desktop/main.js`.
+- [ ] `3A.2` Extract auth state checks and debug-window lifecycle management out of `apps/desktop/main.js` before history and memory features make it harder to reason about.
+- [ ] `3A.3` Split renderer UI logic into smaller modules once settings, history, memory, and debug-window features land.
+- [ ] `3A.4` Define a stable desktop state model for docked versus popped-out debug views, status-bar visibility, query history, and later memory-management state.
+- [ ] `3A.5` Add regression coverage for the settings menu, auth entry points, memory manager, and history deletion flows.
 
----
+### Workstream `3B`: Docs and architecture capture
 
-## 11. GitHub setup
+Goal: keep durable technical and product context from leaking out of the repo.
 
-- [ ] Add `.gitignore` if needed
-- [ ] Add license
-- [ ] Add issue templates
-- [ ] Add milestones for Phase 1 / 2 / 3
-- [ ] Add labels such as `terminal`, `desktop`, `safety`, `ux`, `core`, `codex-integration`
-- [ ] Add a short project description for the repo homepage
+Dependencies: none.
 
----
+- [ ] `3B.1` Add a small architecture note describing how shared core, desktop UI, persisted settings, and Codex-local files interact.
+- [ ] `3B.2` Create a lightweight reusable knowledge log (`WIKI.md` or equivalent) once repeated Codex/Windows findings start accumulating enough that chat-only explanations are not durable enough.
+- [ ] `3B.3` Decide whether external research needs stronger repo-level guardrails beyond `AGENTS.md` guidance, and document the chosen web-source hygiene approach.
 
-## 12. Open questions
+### Workstream `3C`: Wrapped terminal track
 
-- [ ] What should the product be called externally?
-- [ ] Should the terminal wrapper and desktop app ship from the same package or as separate entry points?
-- [ ] How much status detail is helpful before it becomes noisy?
-- [ ] Should task templates be explicit buttons, starter prompts, or both?
-- [ ] How should approvals be represented in the desktop UI?
-- [ ] What is the cleanest fallback if Codex JSON output changes between versions?
-- [ ] Is there a path later toward a long-running backend instead of spawning one run per task?
+Goal: keep the terminal route viable for ordinary Windows users across everyday PC tasks rather than letting the desktop app become the only serious path.
 
----
+Dependencies: none.
 
-## 13. Nice-to-have later
+- [ ] `3C.1` Improve launcher UX, startup location behavior, help text, and shortcut creation.
+- [ ] `3C.2` Keep the terminal route viable for ordinary Windows tasks, not just repos.
 
-- [ ] session history
-- [ ] export run log
-- [ ] dry-run mode for file tasks
-- [ ] side-by-side action preview
-- [ ] undo support where feasible
-- [ ] task presets for common household use cases
-- [ ] accessibility pass
-- [ ] optional local analytics/debug logs for development only
+### Workstream `3D`: Product framing
+
+Goal: reduce ambiguity about what this product is called and who it is for, without letting naming work displace trust/robustness work.
+
+Dependencies: none. Do not let this displace `0A` or `1A-1D` unless the user explicitly reprioritizes it.
+
+- [ ] `3D.1` Decide whether `Friendex` is now the product name everywhere, or only a desktop-shell label while the broader naming decision remains open.
+- [ ] `3D.2` Finalize the external product name and retire `ChatGPT File Helper` when appropriate.
+- [ ] `3D.3` Write down the first 5 to 7 everyday Windows workflows the product explicitly optimizes for across files, search, settings/configuration help, and general local-tool help.
+- [ ] `3D.4` Decide how much status detail is actually helpful before it becomes noise.
+- [x] `3D.5` Reframe the repo docs so Friendex is positioned as a broader everyday-PC helper rather than only a file-task assistant.
+- [ ] `3D.6` Define the Friendex interaction boundary:
+  - what should pass through from Codex mostly unchanged
+  - what should be lightly translated
+  - what should be actively interpreted, summarized, or guarded

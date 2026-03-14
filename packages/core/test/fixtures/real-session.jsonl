@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"019ce835-26c4-76c2-896d-d8419b753929"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I'm checking the directory contents so I can summarize the top-level files and folders without changing anything."}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"Get-ChildItem -Directory -Force -Name","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"Get-ChildItem -Directory -Force -Name","aggregated_output":"Documents\r\nDownloads\r\nDesktop\r\nPictures\r\n","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"Get-ChildItem -File -Force -Name","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"Get-ChildItem -File -Force -Name","aggregated_output":".gitconfig\r\nNTUSER.DAT\r\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"Here are the top-level contents:\n\nFolders: Documents, Downloads, Desktop, Pictures\nFiles: .gitconfig, NTUSER.DAT"}}
+{"type":"turn.completed","usage":{"input_tokens":5000,"cached_input_tokens":3000,"output_tokens":200}}

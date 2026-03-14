@@ -3,60 +3,121 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChatGPT File Helper</title>
+    <title>Friendex</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
-        <h1>ChatGPT File Helper</h1>
-        <p class="muted">Friendly shell over Codex for file tasks on Windows.</p>
-
-        <div class="card">
-          <label>Working folder</label>
-          <div class="row">
-            <input id="cwd" type="text" placeholder="Choose a folder" />
-            <button id="choose-folder">Browse</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <label>Quick tasks</label>
-          <div class="quick-tasks">
-            <button class="quick-task" data-prompt="Organise the files in this folder into clearly named subfolders. Explain your plan first and wait for approval before making changes.">Organise folder</button>
-            <button class="quick-task" data-prompt="Review this folder and suggest a safe cleanup plan. Do not delete anything without approval.">Safe cleanup</button>
-            <button class="quick-task" data-prompt="Look at the file names in this folder and propose a clearer naming scheme. Wait for approval before renaming anything.">Rename files clearly</button>
-          </div>
-        </div>
-      </aside>
-
       <main class="main-panel">
+        <header class="top-header">
+          <div>
+            <h1 class="product-title">Friendex - A friendly wrapper for ChatGPT Codex</h1>
+          </div>
+
+          <button id="open-settings" class="settings-trigger" type="button" aria-label="Open settings" title="Settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.15 7.15 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.49-.42h-3.84a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.13.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.71 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.84a.5.5 0 0 0 .49-.42l.36-2.54c.58-.23 1.13-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"/>
+            </svg>
+            <span class="settings-label">Settings</span>
+          </button>
+        </header>
+
         <section class="composer card">
           <label for="prompt">What would you like help with?</label>
           <textarea id="prompt" placeholder="Example: Help me organise the pictures in this folder by year and month. Explain first, then wait for my approval."></textarea>
-          <div class="row end">
-            <button id="run">Run with Codex</button>
-          </div>
-        </section>
 
-        <section class="status-strip card">
-          <strong>Status:</strong>
-          <span id="status">Idle.</span>
+          <div class="composer-actions">
+            <div class="example-strip">
+              <span class="inline-label">Try an example task:</span>
+              <button class="quick-task" data-prompt="Organise the files in this folder into clearly named subfolders. Explain your plan first and wait for approval before making changes.">Organise folder</button>
+              <button class="quick-task" data-prompt="Review this folder and suggest a safe cleanup plan. Do not delete anything without approval.">Safe cleanup</button>
+              <button class="quick-task" data-prompt="Look at the file names in this folder and propose a clearer naming scheme. Wait for approval before renaming anything.">Rename files clearly</button>
+            </div>
+
+            <div class="row end run-actions">
+              <button id="cancel" class="danger" type="button" hidden>Cancel</button>
+              <button id="run" type="button">Go!</button>
+            </div>
+          </div>
         </section>
 
         <section class="output-grid">
           <section class="card">
             <h2>Friendly output</h2>
+            <p id="run-note" class="run-note" hidden></p>
             <pre id="final-output"></pre>
           </section>
 
-          <section class="card">
+          <section id="debug-panel" class="card">
             <h2>Debug / events</h2>
             <pre id="event-log"></pre>
           </section>
         </section>
       </main>
+
+      <footer id="status-bar" class="status-bar">
+        <div class="status-main">
+          <strong>Status:</strong>
+          <span id="status">Idle.</span>
+        </div>
+        <p id="status-help" class="status-help">Tasks that need approval may still hand off outside this window in the current integration.</p>
+      </footer>
     </div>
+
+    <div id="settings-backdrop" class="settings-backdrop" hidden></div>
+    <aside id="settings-panel" class="settings-panel" aria-hidden="true">
+      <div class="settings-header">
+        <div>
+          <p class="eyebrow">Settings</p>
+          <h2>Controls and access</h2>
+        </div>
+        <button id="close-settings" class="icon-button close-button" type="button" aria-label="Close settings" title="Close settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L10.59 13.4 4.29 19.7 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29l6.3 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+
+      <section class="settings-card">
+        <p class="eyebrow">Working folder</p>
+        <label for="settings-cwd">Folder path</label>
+        <input id="settings-cwd" type="text" placeholder="No folder selected yet" />
+        <div class="row">
+          <button id="choose-folder" type="button">Browse</button>
+          <button id="save-folder" type="button">Save folder</button>
+        </div>
+        <button id="clear-folder" class="subtle-button" type="button">Clear saved folder</button>
+        <p id="settings-note" class="muted small-text">This folder will still be here after you restart the app.</p>
+      </section>
+
+      <section class="settings-card">
+        <p class="eyebrow">Display</p>
+        <label class="checkbox-row" for="setting-status-bar">
+          <input id="setting-status-bar" type="checkbox" />
+          <span>Show the bottom status bar</span>
+        </label>
+
+        <label for="setting-debug-mode">Debug / events location</label>
+        <select id="setting-debug-mode">
+          <option value="hidden">Hide it</option>
+          <option value="docked">Show it in the main window</option>
+          <option value="popped">Pop it out into a separate window</option>
+        </select>
+        <p class="muted small-text">Use the separate window when you want less clutter in the main task view.</p>
+      </section>
+
+      <section class="settings-card">
+        <p class="eyebrow">Codex access</p>
+        <div id="auth-status-badge" class="auth-badge" data-state="checking">Checking access...</div>
+        <p id="auth-message" class="small-text muted">Checking whether Codex is already signed in.</p>
+        <div class="row">
+          <button id="refresh-auth" type="button">Check status</button>
+          <button id="start-browser-auth" type="button">Sign in</button>
+          <button id="start-device-auth" type="button">Use device code</button>
+        </div>
+        <p class="muted small-text">Friendex currently uses non-interactive `codex exec`. If a task needs more permission than the run has, Codex explains that it was blocked instead of pausing here for a live approval dialog.</p>
+      </section>
+    </aside>
 
     <script src="renderer.js"></script>
   </body>

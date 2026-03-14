@@ -7,23 +7,51 @@ export class CodexRunner extends EventEmitter {
     super();
     this.codexCommand = options.codexCommand || 'codex';
     this.cwd = options.cwd || process.cwd();
+    this.spawn = options.spawn || spawn;
     this.child = null;
+    this.lastAgentMessage = null;
   }
 
   startRun(prompt, options = {}) {
     const args = ['exec', '--json'];
+    const promptText = typeof prompt === 'string' ? prompt : String(prompt ?? '');
 
     if (options.skipGitRepoCheck) {
       args.push('--skip-git-repo-check');
     }
 
-    args.push(prompt);
+    if (options.sandbox) {
+      args.push('--sandbox', options.sandbox);
+    }
 
-    this.child = spawn(this.codexCommand, args, {
+    if (options.fullAuto) {
+      args.push('--full-auto');
+    }
+
+    for (const override of options.configOverrides || []) {
+      if (override) {
+        args.push('-c', override);
+      }
+    }
+
+    args.push('-');
+
+    this.lastAgentMessage = null;
+
+    this.child = this.spawn(this.codexCommand, args, {
       cwd: options.cwd || this.cwd,
       shell: true,
       env: process.env
     });
+
+    if (this.child.stdin) {
+      this.child.stdin.on('error', (error) => {
+        if (error.code !== 'EPIPE' && error.code !== 'ERR_STREAM_DESTROYED') {
+          this.emit('error', error);
+        }
+      });
+      this.child.stdin.end(promptText);
+    }
 
     let stdoutBuffer = '';
     let stderrBuffer = '';
@@ -65,16 +93,34 @@ export class CodexRunner extends EventEmitter {
       this.emit('event', event);
       this.emit('status', mapCodexEventToStatus(event));
 
-      if (event.type === 'turn.completed' && event.output_text) {
-        this.emit('final', event.output_text);
+      // Agent messages: emit as they arrive
+      if (event.type === 'item.completed' && event.item?.type === 'agent_message' && event.item.text) {
+        this.lastAgentMessage = event.item.text;
+        this.emit('message', event.item.text);
       }
 
-      if (event.type === 'message' && event.role === 'assistant' && event.content) {
-        this.emit('final', event.content);
+      // Command execution events
+      if (event.item?.type === 'command_execution') {
+        this.emit('command', {
+          id: event.item.id,
+          command: event.item.command,
+          phase: event.type === 'item.started' ? 'started' : 'completed',
+          exitCode: event.item.exit_code,
+          output: event.item.aggregated_output,
+          status: event.item.status
+        });
+      }
+
+      // Turn completed: emit the last agent message as final output
+      if (event.type === 'turn.completed') {
+        this.emit('final', this.lastAgentMessage || '');
+        if (event.usage) {
+          this.emit('usage', event.usage);
+        }
       }
     } catch {
       this.emit('raw', line);
-      this.emit('status', 'Working…');
+      this.emit('status', 'Working...');
     }
   }
 }
